@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 #Carga de dataset df_movies
-df_movies = pd.read_csv("./Dataset/df_movies.csv")
+df_movies = pd.read_parquet("./Dataset/df_movies.parquet")
 df_movies['release_date'] = pd.to_datetime(df_movies['release_date'])
 
 @app.get("/")
@@ -181,7 +181,7 @@ def get_actor(nombre_actor: str)->str:
     """
 
     #Carga de dataset df_movies_cast
-    df_movies_cast = pd.read_csv("./Dataset/df_movies_cast.csv")
+    df_movies_cast = pd.read_parquet("./Dataset/df_movies_cast.parquet")
 
     # Filtrar las filas que contienen al actor consultado
     peliculas_actor = df_movies_cast[df_movies_cast['cast_name'].apply(lambda x: nombre_actor in x)]
@@ -207,7 +207,7 @@ def get_director(nombre_director: str):
         str: _Retorno Total, Peliculas (Nombre,Fecha de lanzamiento,Retorno,Ganancia y Costo)_
     """
     #Carga de dataset df_movies_crew
-    df_movies_crew = pd.read_csv("./Dataset/df_movies_crew.csv")
+    df_movies_crew = pd.read_parquet("./Dataset/df_movies_crew.parquet")
 
     # Filtrar las filas que contienen al director consultado
     peliculas_director = df_movies_crew[df_movies_crew['crew_name'] == nombre_director]
@@ -261,7 +261,7 @@ def recomendacion(titulo_pelicula:str):
     Returns:
         _Peliculas Similares_: _5 Peliculas Similares_
     """
-    df_peliculas = pd.read_csv("./Dataset/df_movies.csv")
+    df_peliculas = pd.read_parquet("./Dataset/df_movies.parquet")
     # Reemplazar None con cadenas vacias
     df_movies_prep = df_peliculas.fillna('') 
     #Extraer las columnas relevantes para el modelo 
