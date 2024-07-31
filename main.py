@@ -256,16 +256,18 @@ def recomendacion(titulo_pelicula:str):
     """_Modelo de Recomendacion 5 Peliculas similares_
 
     Args:
-        titulo_pelicula (str): _Titulo de la Pelicula_
+        titulo_pelicula (str): _Titulo de la Pelicula: Lost in Paris, Beyond Skyline, Phillauri, Small Crimes, Citizen Jane: Battle for the City, The Lego Batman Movie_
 
     Returns:
         _Peliculas Similares_: _5 Peliculas Similares_
     """
     df_peliculas = pd.read_parquet("./Dataset/df_movies.parquet")
+ 
     # Reemplazar None con cadenas vacias
     df_movies_prep = df_peliculas.fillna('') 
     #Extraer las columnas relevantes para el modelo 
     df_modelo = df_movies_prep[['title', 'overview']].copy() 
+    
     # Crear una instancia de TfidfVectorizer con los parámetros deseados 
     tfidf = TfidfVectorizer(stop_words="english", ngram_range=(1, 2)) 
     # Aplicar la transformación TF-IDF al contenido
@@ -287,25 +289,33 @@ def recomendacion(titulo_pelicula:str):
 
         # Encuentra el índice de la película en el DataFrame
         idx = df.index[df['title'] == movie_title].tolist()[0]
-
+        
         # Calcula la similitud del coseno entre la película seleccionada y todas las demás
         cosine_sim = cosine_similarity(tfidf_matrix[idx:idx+1], tfidf_matrix).flatten()
 
         # Crea una serie con los índices de similitud y los títulos de las películas
         sim_scores = list(enumerate(cosine_sim))
-        
+        print(sim_scores)
         # Ordena las películas según la puntuación de similitud (en orden descendente)
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        
-        # Obtiene los índices de las 5 películas más similares (excluyendo la película misma)
-        sim_scores = sim_scores[1:6]
-        
-        # Extrae los índices de las películas
-        movie_indices = [i[0] for i in sim_scores]
-        
-        # Devuelve los títulos de las películas más similares
-        return df['title'].iloc[movie_indices].tolist()
 
+        # Obtiene los índices de las 5 películas más similares (excluyendo la película misma)
+        #sim_scores = sim_scores[1:6]
+        if len(sim_scores)>1:
+            if len(sim_scores)>5:
+                sim_scores = sim_scores[1:6]
+            
+                # Extrae los índices de las películas
+                movie_indices = [i[0] for i in sim_scores]
+                
+                # Devuelve los títulos de las películas más similares
+                return df['title'].iloc[movie_indices].tolist()
+            else:
+                sim_scores = sim_scores[1:len(sim_scores)]
+                movie_indices = [i[0] for i in sim_scores]
+                
+        else:
+            return df['title'].iloc[movie_indices]    
     movie_title = titulo_pelicula
     
     recommended_movies = recommend_movies(movie_title, df_modelo, tfidf_matriz)
