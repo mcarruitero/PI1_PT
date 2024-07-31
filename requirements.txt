@@ -71,7 +71,7 @@ PyMySQL==1.1.0
 pyparsing==3.1.2
 python-dateutil==2.9.0.post0
 pytz==2024.1
-pywin32==306
+# pywin32==306
 pyzmq==25.0.2
 regex==2023.12.25
 requests==2.31.0
@@ -96,7 +96,7 @@ typing_extensions==4.10.0
 tzdata==2024.1
 urllib3==2.0.4
 uvicorn==0.28.0
-vboxapi==1.0
+# vboxapi==1.0
 wasmtime==22.0.0
 wcwidth==0.2.6
 widgetsnbextension==4.0.11
