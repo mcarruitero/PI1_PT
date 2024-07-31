@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import pandas as pd
+import sklearn
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
@@ -246,3 +250,63 @@ def get_director(nombre_director: str):
     }
     
     return respuesta
+    
+@app.get('/get_recomendacion/{titulo_pelicula}')
+def recomendacion(titulo_pelicula:str):
+    """_Modelo de Recomendacion 5 Peliculas similares_
+
+    Args:
+        titulo_pelicula (str): _Titulo de la Pelicula_
+
+    Returns:
+        _Peliculas Similares_: _5 Peliculas Similares_
+    """
+    df_peliculas = pd.read_csv("./Dataset/df_movies.csv")
+    # Reemplazar None con cadenas vacias
+    df_movies_prep = df_peliculas.fillna('') 
+    #Extraer las columnas relevantes para el modelo 
+    df_modelo = df_movies_prep[['title', 'overview']].copy() 
+    # Crear una instancia de TfidfVectorizer con los parámetros deseados 
+    tfidf = TfidfVectorizer(stop_words="english", ngram_range=(1, 2)) 
+    # Aplicar la transformación TF-IDF al contenido
+    tfidf_matriz = tfidf.fit_transform(df_modelo['overview'])    
+    
+    def recommend_movies(movie_title, df, tfidf_matrix):
+        """
+        Recomienda películas similares basadas en el título de una película.
+        
+        :param movie_title: Título de la película para la cual se quiere encontrar recomendaciones.
+        :param df: DataFrame que contiene los datos de las películas, incluyendo 'title' y 'overview'.
+        :param tfidf_matrix: Matriz TF-IDF del contenido de las películas.
+        
+        :return: Lista con los nombres de las 5 películas más similares.
+        """
+        # Verifica si la película está en el DataFrame
+        if movie_title not in df['title'].values:
+            return "La película no se encuentra en la base de datos."
+
+        # Encuentra el índice de la película en el DataFrame
+        idx = df.index[df['title'] == movie_title].tolist()[0]
+
+        # Calcula la similitud del coseno entre la película seleccionada y todas las demás
+        cosine_sim = cosine_similarity(tfidf_matrix[idx:idx+1], tfidf_matrix).flatten()
+
+        # Crea una serie con los índices de similitud y los títulos de las películas
+        sim_scores = list(enumerate(cosine_sim))
+        
+        # Ordena las películas según la puntuación de similitud (en orden descendente)
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        
+        # Obtiene los índices de las 5 películas más similares (excluyendo la película misma)
+        sim_scores = sim_scores[1:6]
+        
+        # Extrae los índices de las películas
+        movie_indices = [i[0] for i in sim_scores]
+        
+        # Devuelve los títulos de las películas más similares
+        return df['title'].iloc[movie_indices].tolist()
+
+    movie_title = titulo_pelicula
+    
+    recommended_movies = recommend_movies(movie_title, df_modelo, tfidf_matriz)
+    return recommended_movies
